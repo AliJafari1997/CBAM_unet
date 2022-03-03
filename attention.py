@@ -97,5 +97,36 @@ def squeeze_excite_block(inputs, ratio=8):
     return x
 
 
+def ASPP(x, filter):
+    shape = x.shape
 
+    y1 = AveragePooling2D(pool_size=(shape[1], shape[2]))(x)
+    y1 = Conv2D(filter, 1, padding="same")(y1)
+    y1 = BatchNormalization()(y1)
+    y1 = Activation("relu")(y1)
+    y1 = UpSampling2D((shape[1], shape[2]), interpolation="bilinear")(y1)
+
+    y2 = Conv2D(filter, 1, dilation_rate=1, padding="same", use_bias=False)(x)
+    y2 = BatchNormalization()(y2)
+    y2 = Activation("relu")(y2)
+
+    y3 = Conv2D(filter, 3, dilation_rate=6, padding="same", use_bias=False)(x)
+    y3 = BatchNormalization()(y3)
+    y3 = Activation("relu")(y3)
+
+    y4 = Conv2D(filter, 3, dilation_rate=12, padding="same", use_bias=False)(x)
+    y4 = BatchNormalization()(y4)
+    y4 = Activation("relu")(y4)
+
+    y5 = Conv2D(filter, 3, dilation_rate=18, padding="same", use_bias=False)(x)
+    y5 = BatchNormalization()(y5)
+    y5 = Activation("relu")(y5)
+
+    y = Concatenate()([y1, y2, y3, y4, y5])
+
+    y = Conv2D(filter, 1, dilation_rate=1, padding="same", use_bias=False)(y)
+    y = BatchNormalization()(y)
+    y = Activation("relu")(y)
+
+    return y
     
