@@ -119,3 +119,11 @@ class ResUnetPlusPlus:
         ## Model
         model = Model(inputs, outputs)
         return model
+    
+    
+    
+    
+if __name__ == "__main__":
+    input_shape = (256, 256, 3)
+    model = build_model(input_shape)
+    model.summary()
