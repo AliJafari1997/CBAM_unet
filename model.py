@@ -76,53 +76,45 @@ def attetion_block(g, x):
     return gc_mul
 
 
-class ResUnetPlusPlus:
-    def __init__(self, input_size=256):
-        self.input_size = input_size
-
-    def build_model(self):
-        n_filters = [16, 32, 64, 128, 256]
-        inputs = Input((self.input_size, self.input_size, 3))
-
-        c0 = inputs
-        c1 = stem_block(c0, n_filters[0], strides=1)
+def build_model(input_shape):
+    inputs=Input(shape=input_shape)
+    c0=inputs
+    n_filters=[16,32,64,128,256]
+    c1 = stem_block(c0, n_filters[0], strides=1)
 
         ## Encoder
-        c2 = resnet_block(c1, n_filters[1], strides=2)
-        c3 = resnet_block(c2, n_filters[2], strides=2)
-        c4 = resnet_block(c3, n_filters[3], strides=2)
+    c2 = resnet_block(c1, n_filters[1], strides=2)
+    c3 = resnet_block(c2, n_filters[2], strides=2)
+    c4 = resnet_block(c3, n_filters[3], strides=2)
 
-        ## Bridge
-        b1 = ASPP(c4, n_filters[4])
+    ## Bridge
+    b1 = ASPP(c4, n_filters[4])    
 
-        ## Decoder
-        d1 = attetion_block(c3, b1)
-        d1 = UpSampling2D((2, 2))(d1)
-        d1 = Concatenate()([d1, c3])
-        d1 = resnet_block(d1, n_filters[3])
+    d1 = attetion_block(c3, b1)
+    d1 = UpSampling2D((2, 2))(d1)
+    d1 = Concatenate()([d1, c3])
+    d1 = resnet_block(d1, n_filters[3])
 
-        d2 = attetion_block(c2, d1)
-        d2 = UpSampling2D((2, 2))(d2)
-        d2 = Concatenate()([d2, c2])
-        d2 = resnet_block(d2, n_filters[2])
+    d2 = attetion_block(c2, d1)
+    d2 = UpSampling2D((2, 2))(d2)
+    d2 = Concatenate()([d2, c2])
+    d2 = resnet_block(d2, n_filters[2])
 
-        d3 = attetion_block(c1, d2)
-        d3 = UpSampling2D((2, 2))(d3)
-        d3 = Concatenate()([d3, c1])
-        d3 = resnet_block(d3, n_filters[1])
+    d3 = attetion_block(c1, d2)
+    d3 = UpSampling2D((2, 2))(d3)
+    d3 = Concatenate()([d3, c1])
+    d3 = resnet_block(d3, n_filters[1])
 
-        ## output
-        outputs = ASPP(d3, n_filters[0])
-        outputs = Conv2D(1, (1, 1), padding="same")(outputs)
-        outputs = Activation("sigmoid")(outputs)
+    ## output
+    outputs = ASPP(d3, n_filters[0])
+    outputs = Conv2D(1, (1, 1), padding="same")(outputs)
+    outputs = Activation("sigmoid")(outputs)
 
-        ## Model
-        model = Model(inputs, outputs)
-        return model
-    
-    
-    
-    
+    ## Model
+    model = Model(inputs, outputs)
+    return model   
+
+
 if __name__ == "__main__":
     input_shape = (256, 256, 3)
     model = build_model(input_shape)
